@@ -41,5 +41,22 @@ for (const f of SH) for (const r of SH) for (const b of SH) for (const full of W
   if (norm(fixed) !== norm(mine)) { fail++; if (fail < 4) console.log('DIFF', { f, r, b, full, strip }, '\nA:', norm(fixed), '\nB:', mine); }
   else if (norm(raw) !== norm(mine)) noneOnly++;
 }
+const NAMED = {
+  'full car (all sides + rear, no windshield)': ['20%', '20%', '20%', '', 'No'],
+  'two fronts + full windshield': ['20%', '', '', '35%', 'No'],
+  'two fronts + strip': ['20%', '', '', '', 'Yes'],
+  'full windshield + strip': ['', '', '', '35%', 'Yes'],
+  'strip only': ['', '', '', '', 'Yes'],
+  'everything': ['20%', '20%', '5%', '50%', 'Yes'],
+};
+const out = [];
+for (const [name, [f, r, b, full, strip]] of Object.entries(NAMED)) {
+  const mine = buildPrompt({ year: '2026', make: 'Chevrolet', model: 'Tahoe', body: 'SUV', color: 'Red', front: f, rear: r, back: b, full, strip: strip === 'Yes' });
+  const ok = norm(airtablePrompt('2026 Chevrolet Tahoe', 'SUV', 'Red', f, r, b, full, strip)) === norm(mine);
+  if (!ok) fail++;
+  console.log(`NAMED ${ok ? 'MATCH' : 'DIFF '} ${name}`);
+  out.push(`### ${name}\n${mine.split('\n')[7]}`);
+}
+require('fs').writeFileSync(__dirname + '/named-cases.md', out.join('\n\n') + '\n');
 console.log(`${n} combos; ${n - fail} identical after allowed fixes; ${noneOnly} of those differ from the raw formula only because a field said "None"; ${fail} real differences`);
 process.exit(fail ? 1 : 0);
