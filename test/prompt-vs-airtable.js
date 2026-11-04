@@ -1,11 +1,11 @@
 // Replicates Mike's Airtable formulas literally (Windshield Segment, Side & Rear Segment, Prompt)
 // and diffs them against buildPrompt for every combination.
-const { buildPrompt } = require('../prompt');
+const { buildPrompt, STRIP_CUT } = require('../prompt');
 const T = v => !!v; // Airtable truthiness: any non-empty string, incl. "None", is true
 function wsSeg(full, strip) {
-  if (T(full) && strip === 'Yes') return 'CRUCIAL WINDSHIELD SPECIFICATION: The entire front windshield is fully covered in a distinct, dark ' + full + '  window tint. The glass must be rendered as dark smoked glass, significantly obscuring the view into the vehicle cabin. Additionally with an extra dark 5%  solid black eyebrow/sun strip running across the top 8 inches of the windshield.';
+  if (T(full) && strip === 'Yes') return 'CRUCIAL WINDSHIELD SPECIFICATION: The entire front windshield is fully covered in a distinct, dark ' + full + '  window tint. The glass must be rendered as dark smoked glass, significantly obscuring the view into the vehicle cabin. Additionally with an extra dark 5%  solid black eyebrow/sun strip running across the top 8 inches of the windshield.' + STRIP_CUT;
   if (T(full)) return 'CRUCIAL WINDSHIELD SPECIFICATION: The entire front windshield is fully covered in a distinct, dark ' + full + ' window tint. The glass must be rendered as dark smoked glass, significantly obscuring the view into the vehicle cabin.';
-  if (strip === 'Yes') return 'CRUCIAL WINDSHIELD SPECIFICATION: The main front windshield glass is clear and transparent, but features an extra-dark 5% solid black eyebrow strip running across the top 8 inches of the glass.';
+  if (strip === 'Yes') return 'CRUCIAL WINDSHIELD SPECIFICATION: The main front windshield glass is clear and transparent, but features an extra-dark 5% solid black eyebrow strip running across the top 8 inches of the glass.' + STRIP_CUT;
   return '';
 }
 function srSeg(f, r, b) {

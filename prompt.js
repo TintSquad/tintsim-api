@@ -1,3 +1,4 @@
+const STRIP_CUT = ' The strip is precision plotter-cut so its bottom edge forms a perfectly straight, level horizontal line across the full width of the windshield, parallel to the hood line. It does NOT follow the curved factory dot-matrix/frit edge and does not dip or slope down at the corners; the strip is an even height from side to side.';
 const clean = s => String(s || '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
 // Wording is Mike's original Airtable formulas (Windshield Segment, Side & Rear Segment, Prompt),
 // verbatim except typo fixes: underscores -> spaces, double spaces collapsed, missing line break after the Note.
@@ -7,9 +8,9 @@ function sideRear(o) {
     'The rear windshield has ' + (o.back ? `${o.back} window tint. ` : 'The standard OEM factory glass. ');
 }
 function windshield(full, strip) {
-  if (full && strip) return `CRUCIAL WINDSHIELD SPECIFICATION: The entire front windshield is fully covered in a distinct, dark ${full} window tint. The glass must be rendered as dark smoked glass, significantly obscuring the view into the vehicle cabin. Additionally with an extra dark 5% solid black eyebrow/sun strip running across the top 8 inches of the windshield.`;
+  if (full && strip) return `CRUCIAL WINDSHIELD SPECIFICATION: The entire front windshield is fully covered in a distinct, dark ${full} window tint. The glass must be rendered as dark smoked glass, significantly obscuring the view into the vehicle cabin. Additionally with an extra dark 5% solid black eyebrow/sun strip running across the top 8 inches of the windshield.` + STRIP_CUT;
   if (full) return `CRUCIAL WINDSHIELD SPECIFICATION: The entire front windshield is fully covered in a distinct, dark ${full} window tint. The glass must be rendered as dark smoked glass, significantly obscuring the view into the vehicle cabin.`;
-  if (strip) return 'CRUCIAL WINDSHIELD SPECIFICATION: The main front windshield glass is clear and transparent, but features an extra-dark 5% solid black eyebrow strip running across the top 8 inches of the glass.';
+  if (strip) return 'CRUCIAL WINDSHIELD SPECIFICATION: The main front windshield glass is clear and transparent, but features an extra-dark 5% solid black eyebrow strip running across the top 8 inches of the glass.' + STRIP_CUT;
   return '';
 }
 function buildPrompt(o) {
@@ -49,4 +50,4 @@ async function gemini(model, prompt, key, size = '1K') {
   if (!part) throw new Error('no image: ' + JSON.stringify(j).slice(0, 300));
   return { buf: Buffer.from(part.inlineData.data, 'base64'), mime: part.inlineData.mimeType, usage: j.usageMetadata };
 }
-module.exports = { buildPrompt, gemini };
+module.exports = { buildPrompt, gemini, STRIP_CUT };
