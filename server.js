@@ -90,7 +90,7 @@ http.createServer(async (req, res) => {
   const okOrigin = cors(req, res);
   const u = new URL(req.url, 'http://x');
   if (req.method === 'OPTIONS') return send(res, okOrigin ? 204 : 403, '');
-  if (u.pathname === '/health') return send(res, 200, { ok: true, model: MODEL, rendersToday, cap: DAILY_CAP });
+  if (u.pathname === '/health') return send(res, 200, { ok: true, model: MODEL, rendersToday, cap: DAILY_CAP, writeLeads: WRITE_LEADS && !!E.AIRTABLE_TOKEN, keys: { gemini: (E.GEMINI_API_KEY||'').length > 20, airtable: (E.AIRTABLE_TOKEN||'').length > 20 } });
   const m = u.pathname.match(/^\/img\/([a-f0-9]{32})\.jpg$/);
   if (m && req.method === 'GET') { const b = readCache(m[1]); return b ? send(res, 200, b, { 'Cache-Control': 'public, max-age=31536000, immutable' }) : send(res, 404, { error: 'not found' }); }
   if (u.pathname === '/render' && req.method === 'POST') {
