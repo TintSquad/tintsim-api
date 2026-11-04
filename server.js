@@ -51,7 +51,7 @@ async function render(req, res) {
   if (!bump('ip:' + ip, 3600e3, IP_PER_HOUR)) return send(res, 429, { error: 'Too many previews from this connection. Try again in an hour, or call (315) 418-5442.' });
 
   const combo = { year: String(b.year), make: v.make, model: v.model, body: v.body, color: col.name, ...t };
-  const key = crypto.createHash('sha256').update(MODEL + '|' + JSON.stringify(combo)).digest('hex').slice(0, 32);
+  const key = crypto.createHash('sha256').update(MODEL + '|p2|' + JSON.stringify(combo)).digest('hex').slice(0, 32);
   if ((E.GEMINI_API_KEY||'').length < 20) return send(res, 503, { error: 'The simulator is not switched on yet. Please check back soon.' });
   const url = `${PUBLIC_URL}/img/${key}.jpg`;
     const t0 = Date.now(); let cached = !!readCache(key);

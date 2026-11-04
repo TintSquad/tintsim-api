@@ -1,28 +1,30 @@
-// Cleaned-up version of the Airtable "Prompt" formula (Leads & Submissions).
 const clean = s => String(s || '').replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
-const FACTORY = 'the standard factory (OEM) glass, left untouched';
-function glass(label, shade) {
-  return shade ? `The ${label} have ${shade} window tint.` : `The ${label} have ${FACTORY}.`;
+// Wording is Mike's original Airtable formulas (Windshield Segment, Side & Rear Segment, Prompt),
+// verbatim except typo fixes: underscores -> spaces, double spaces collapsed, missing line break after the Note.
+function sideRear(o) {
+  return 'The front side windows have ' + (o.front ? `${o.front} window tint. ` : 'The standard clear factory glass. ') +
+    'The rear side windows have ' + (o.rear ? `${o.rear} window tint. ` : 'The standard OEM factory glass. ') +
+    'The rear windshield has ' + (o.back ? `${o.back} window tint. ` : 'The standard OEM factory glass. ');
 }
 function windshield(full, strip) {
-  if (full && strip) return `CRUCIAL WINDSHIELD SPECIFICATION: The entire front windshield is fully covered in a distinct, dark ${full} window tint. The glass must be rendered as dark smoked glass, significantly obscuring the view into the vehicle cabin. Additionally, an extra-dark 5% solid black eyebrow/sun strip runs across the top 8 inches of the windshield.`;
+  if (full && strip) return `CRUCIAL WINDSHIELD SPECIFICATION: The entire front windshield is fully covered in a distinct, dark ${full} window tint. The glass must be rendered as dark smoked glass, significantly obscuring the view into the vehicle cabin. Additionally with an extra dark 5% solid black eyebrow/sun strip running across the top 8 inches of the windshield.`;
   if (full) return `CRUCIAL WINDSHIELD SPECIFICATION: The entire front windshield is fully covered in a distinct, dark ${full} window tint. The glass must be rendered as dark smoked glass, significantly obscuring the view into the vehicle cabin.`;
   if (strip) return 'CRUCIAL WINDSHIELD SPECIFICATION: The main front windshield glass is clear and transparent, but features an extra-dark 5% solid black eyebrow strip running across the top 8 inches of the glass.';
-  return 'The front windshield is clear, untinted factory glass.';
+  return '';
 }
 function buildPrompt(o) {
   const veh = clean(`${o.year} ${o.make} ${o.model} ${o.body || ''}`);
   return [
-    "You are generating an image for an automotive window tint simulator application. Your primary objective is to produce an image that accurately depicts the specified windows with their corresponding tint percentages on the customer's exact vehicle.",
+    "You are generating an Image response for an automotive window tint simulator application. Your primary objective is to produce an image that accurately depicts the specified windows along with their corresponding tint percentages on the client's exact vehicle.",
     '',
-    "User's Vehicle Specifications:",
+    'Users Vehicle Specifications:',
     `${veh}.`,
     `Paint Color: ${clean(o.color)}.`,
     '',
     'Window Tint Details:',
-    [glass('front side windows', o.front), glass('rear side windows', o.rear), glass('rear windshield', o.back).replace('The rear windshield have', 'The rear windshield has'), windshield(o.full, o.strip)].join(' '),
+    clean(sideRear(o) + ' ' + windshield(o.full, o.strip)),
     '',
-    'Note: Standard OEM rear privacy glass represents a 20% darkness level. Front windows tinted at 20% must match the factory rear glass in shade and opacity for a uniform visual match.',
+    'Note: Standard OEM rear privacy glass represents a 20% darkness level—front windows tinted at 20% must seamlessly match the factory rear glass in shade and opacity for a uniform visual match.',
     '',
     'Environment & Background Setup',
     'Setting: Minimalist professional commercial photography studio.',
