@@ -3,7 +3,8 @@ const http = require('http'), fs = require('fs'), path = require('path'), crypto
 const { buildPrompt, gemini } = require('./prompt');
 const E = process.env;
 const PORT = E.PORT || 10000;
-const MODEL = E.GEMINI_MODEL || 'gemini-3.1-flash-image';
+const MODEL = E.GEMINI_MODEL || 'gemini-3-pro-image';
+const SIZE = E.GEMINI_SIZE || '2K';
 const DAILY_CAP = +E.DAILY_CAP || 100;          // new (uncached) renders per day
 const IP_PER_HOUR = +E.IP_PER_HOUR || 6;
 const CACHE_DIR = E.CACHE_DIR || '/tmp/tintsim-cache';
@@ -51,7 +52,7 @@ async function render(req, res) {
   if (!bump('ip:' + ip, 3600e3, IP_PER_HOUR)) return send(res, 429, { error: 'Too many previews from this connection. Try again in an hour, or call (315) 418-5442.' });
 
   const combo = { year: String(b.year), make: v.make, model: v.model, body: v.body, color: col.name, ...t };
-  const key = crypto.createHash('sha256').update(MODEL + '|p2|' + JSON.stringify(combo)).digest('hex').slice(0, 32);
+  const key = crypto.createHash('sha256').update(MODEL + '|' + SIZE + '|p2|' + JSON.stringify(combo)).digest('hex').slice(0, 32);
   if ((E.GEMINI_API_KEY||'').length < 20) return send(res, 503, { error: 'The simulator is not switched on yet. Please check back soon.' });
   const url = `${PUBLIC_URL}/img/${key}.jpg`;
     const t0 = Date.now(); let cached = !!readCache(key);
@@ -60,7 +61,7 @@ async function render(req, res) {
     if (!inflight.has(key)) {
       if (rendersToday >= DAILY_CAP) return send(res, 503, { error: 'The simulator is at its daily limit. Please try again tomorrow or call (315) 418-5442.' });
       rendersToday++;
-      inflight.set(key, gemini(MODEL, buildPrompt(combo), E.GEMINI_API_KEY).then(r => { fs.writeFileSync(path.join(CACHE_DIR, key + '.jpg'), r.buf); memPut(key, r.buf); }).finally(() => inflight.delete(key)));
+      inflight.set(key, gemini(MODEL, buildPrompt(combo), E.GEMINI_API_KEY, SIZE).then(r => { fs.writeFileSync(path.join(CACHE_DIR, key + '.jpg'), r.buf); memPut(key, r.buf); }).finally(() => inflight.delete(key)));
     }
     try { await inflight.get(key); } catch (e) { console.log('gemini error', e.message); return send(res, 502, { error: 'The preview could not be generated. Please try again.' }); }
   }
@@ -72,7 +73,7 @@ http.createServer(async (req, res) => {
   const okOrigin = cors(req, res);
   const u = new URL(req.url, 'http://x');
   if (req.method === 'OPTIONS') return send(res, okOrigin ? 204 : 403, '');
-  if (u.pathname === '/health') return send(res, 200, { ok: true, model: MODEL, rendersToday, cap: DAILY_CAP, geminiKeySet: (E.GEMINI_API_KEY||'').length > 20 });
+  if (u.pathname === '/health') return send(res, 200, { ok: true, model: MODEL, size: SIZE, format: 'JPEG 16:9', rendersToday, cap: DAILY_CAP, geminiKeySet: (E.GEMINI_API_KEY||'').length > 20 });
   const m = u.pathname.match(/^\/img\/([a-f0-9]{32})\.jpg$/);
   if (m && req.method === 'GET') { const b = readCache(m[1]); return b ? send(res, 200, b, { 'Cache-Control': 'public, max-age=31536000, immutable' }) : send(res, 404, { error: 'not found' }); }
   if (u.pathname === '/render' && req.method === 'POST') {
